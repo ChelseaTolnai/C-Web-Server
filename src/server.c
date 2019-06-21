@@ -59,6 +59,25 @@ int send_response(int fd, char *header, char *content_type, void *body, int cont
     // IMPLEMENT ME! //
     ///////////////////
 
+    time_t date = time(NULL);
+
+    sprintf(
+        response,
+        "%s\n"
+        "Date: %s"
+        "Connection: close\n"
+        "Content-Length: %d\n"
+        "Content-Type: %s\n"
+        "\n"
+        "%s"
+        ,
+        header, 
+        asctime(localtime(&date)), 
+        content_length, content_type, body
+    );
+
+    unsigned int response_length = strlen(response);
+
     // Send it all!
     int rv = send(fd, response, response_length, 0);
 
