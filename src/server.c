@@ -55,27 +55,26 @@ int send_response(int fd, char *header, char *content_type, void *body, int cont
 
     // Build HTTP response and store it in response
 
-    time_t date = time(NULL);
+    time_t t = time(NULL);
+    struct tm *lt = localtime(&t);
 
-    sprintf(
-        response,
+    int response_length = sprintf(response,
         "%s\n"
         "Date: %s"
         "Connection: close\n"
         "Content-Length: %d\n"
         "Content-Type: %s\n"
-        "\n"
-        "%s"
-        ,
+        "\n",
         header, 
-        asctime(localtime(&date)), 
-        content_length, content_type, body
+        asctime(lt), 
+        content_length, 
+        content_type
     );
 
-    unsigned int response_length = strlen(response);
+    memcpy(response + response_length, body, content_length);
 
     // Send it all!
-    int rv = send(fd, response, response_length, 0);
+    int rv = send(fd, response, response_length + content_length, 0);
 
     if (rv < 0) {
         perror("send");
@@ -135,23 +134,29 @@ void get_file(int fd, struct cache *cache, char *request_path)
     ///////////////////
     // IMPLEMENT ME! //
     ///////////////////
-    char filename[4096];
+    char filepath[4096];
     struct file_data *filedata;
     char *mime_type;
 
-    snprintf(filename, sizeof(filename), "%s%s", SERVER_ROOT, request_path);
-    filedata = file_load(filename);
+    snprintf(filepath, sizeof(filepath), "%s%s", SERVER_ROOT, request_path);
+    filedata = file_load(filepath);
 
     if (filedata == NULL) {
-        resp_404(fd);
-        return;
+        snprintf(filepath, sizeof(filepath), "%s%s/index.html", SERVER_ROOT, request_path);
+
+        filedata = file_load(filepath);
+        
+        if (filedata == NULL) {
+            resp_404(fd);
+            return;
+        }
     }
 
-    mime_type = mime_type_get(filename);
+    mime_type = mime_type_get(filepath);
     
     send_response(fd, "HTTP/1.1 200 OK", mime_type, filedata->data, filedata->size);
     
-    file_free(filename);
+    file_free(filedata);
 }
 
 /**
