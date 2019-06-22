@@ -55,10 +55,6 @@ int send_response(int fd, char *header, char *content_type, void *body, int cont
 
     // Build HTTP response and store it in response
 
-    ///////////////////
-    // IMPLEMENT ME! //
-    ///////////////////
-
     time_t date = time(NULL);
 
     sprintf(
@@ -95,19 +91,11 @@ int send_response(int fd, char *header, char *content_type, void *body, int cont
 void get_d20(int fd)
 {
     // Generate a random number between 1 and 20 inclusive
-    
-    ///////////////////
-    // IMPLEMENT ME! //
-    ///////////////////
 
     char response_body[8];
     sprintf(response_body, "%d\n", (rand() % 20) + 1);
 
     // Use send_response() to send it back as text/plain data
-
-    ///////////////////
-    // IMPLEMENT ME! //
-    ///////////////////
 
     send_response(fd, "HTTP/1.1 200 OK", "text/plain", response_body, strlen(response_body));
 
@@ -147,6 +135,23 @@ void get_file(int fd, struct cache *cache, char *request_path)
     ///////////////////
     // IMPLEMENT ME! //
     ///////////////////
+    char filename[4096];
+    struct file_data *filedata;
+    char *mime_type;
+
+    snprintf(filename, sizeof(filename), "%s%s", SERVER_ROOT, request_path);
+    filedata = file_load(filename);
+
+    if (filedata == NULL) {
+        resp_404(fd);
+        return;
+    }
+
+    mime_type = mime_type_get(filename);
+    
+    send_response(fd, "HTTP/1.1 200 OK", mime_type, filedata->data, filedata->size);
+    
+    file_free(filename);
 }
 
 /**
@@ -178,10 +183,6 @@ void handle_http_request(int fd, struct cache *cache)
         return;
     }
 
-
-    ///////////////////
-    // IMPLEMENT ME! //
-    ///////////////////
     char request_type[8];
     char request_path[1024];
     
