@@ -100,11 +100,17 @@ void get_d20(int fd)
     // IMPLEMENT ME! //
     ///////////////////
 
+    char response_body[8];
+    sprintf(response_body, "%d\n", (rand() % 20) + 1);
+
     // Use send_response() to send it back as text/plain data
 
     ///////////////////
     // IMPLEMENT ME! //
     ///////////////////
+
+    send_response(fd, "HTTP/1.1 200 OK", "text/plain", response_body, strlen(response_body));
+
 }
 
 /**
@@ -191,7 +197,7 @@ void handle_http_request(int fd, struct cache *cache)
     //    Otherwise serve the requested file by calling get_file()
             get_file(fd, cache, request_path);
         }
-    } else if (strcmp(request_path, "POST") == 0) {
+    } else if (strcmp(request_type, "POST") == 0) {
     // (Stretch) If POST, handle the post request
     } else {
         resp_404(fd);
